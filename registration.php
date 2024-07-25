@@ -11,7 +11,38 @@
 <body>
     <div class="container">
         <?php
-            print_r($_POST);
+            //form data submit to database
+            if(isset($_POST['submit'])){
+                $fullName = $_POST['FullName'];
+                $email = $_POST['email'];
+                $password = $_POST['password'];
+                $passwordRep = $_POST['repeat_password'];
+
+                //error handling for registration
+                $errors = array();
+
+                //check if fields are empty
+                if(empty($fullName) || empty($email) || empty($password) || empty($passwordRep)){
+                    array_push($errors, "All fields are required");
+                }
+
+                //check if email is valid
+                if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+                    array_push($errors, "Email is not valid");
+                }
+
+                //check if passwords match
+                if(strlen($password) < 8){
+                    array_push($errors, "Password must be at least 8 characters");
+                }
+
+                //check if repeat password matches
+                if($password != $passwordRep){
+                    array_push($errors, "Passwords do not match");
+                }
+
+                
+            }
         ?>
         <form action="registration.php" method="post">
             <div class="form-group">
