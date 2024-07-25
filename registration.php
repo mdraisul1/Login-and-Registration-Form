@@ -8,41 +8,63 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="style.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <?php
-            //form data submit to database
-            if(isset($_POST['submit'])){
-                $fullName = $_POST['FullName'];
-                $email = $_POST['email'];
-                $password = $_POST['password'];
-                $passwordRep = $_POST['repeat_password'];
+        //form data submit to database
+        if (isset($_POST['submit'])) {
+            $fullName = $_POST['FullName'];
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $passwordRep = $_POST['repeat_password'];
 
-                //error handling for registration
-                $errors = array();
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            //error handling for registration
+            $errors = array();
 
-                //check if fields are empty
-                if(empty($fullName) || empty($email) || empty($password) || empty($passwordRep)){
-                    array_push($errors, "All fields are required");
-                }
-
-                //check if email is valid
-                if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-                    array_push($errors, "Email is not valid");
-                }
-
-                //check if passwords match
-                if(strlen($password) < 8){
-                    array_push($errors, "Password must be at least 8 characters");
-                }
-
-                //check if repeat password matches
-                if($password != $passwordRep){
-                    array_push($errors, "Passwords do not match");
-                }
-
-                
+            //check if fields are empty
+            if (empty($fullName) OR empty($email) OR empty($password) OR empty($passwordRep)) {
+                array_push($errors, "All fields are required");
             }
+
+            //check if email is valid
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                array_push($errors, "Email is not valid");
+            }
+
+            //check if passwords match
+            if (strlen($password) < 8) {
+                array_push($errors, "Password must be at least 8 characters");
+            }
+
+            //check if repeat password matches
+            if ($password !== $passwordRep) {
+                array_push($errors, "Passwords do not match");
+            }
+
+            //no errors, proceed with registration
+            require_once 'database.php';
+
+            //check if there are any errors
+            if (count($errors) > 0) {
+                foreach ($errors as $error) {
+                    echo "<div class='alert alert-danger'>$error</div>";
+                }
+            } else {    
+                //insert data into database
+                $sql = "INSERT INTO users ( full_name, email, password) VALUES (?, ?, ?)";
+                $stmt = mysqli_stmt_init($conn);
+                $prepareStmt = mysqli_stmt_prepare($stmt, $sql);
+                if ($prepareStmt) {
+                    mysqli_stmt_bind_param($stmt, "sss", $fullName, $email, $password_hash);
+                    mysqli_stmt_execute($stmt);
+                    echo "<div class='alert alert-success'>Registration successful</div>";
+                } else {
+                    die("Something went wrong");
+                }
+            }
+        }
         ?>
         <form action="registration.php" method="post">
             <div class="form-group">
@@ -63,4 +85,5 @@
         </form>
     </div>
 </body>
+
 </html>
