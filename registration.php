@@ -1,10 +1,16 @@
+<?php
+    session_start();
+    if(!isset($_SESSION['user'])){
+        header('Location: index.php');
+    }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Registration Form</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="style.css" rel="stylesheet">
 </head>
@@ -34,7 +40,7 @@
             }
 
             //check if passwords match
-            if (strlen($password) < 8) {
+            if (strlen($password) < 6) {
                 array_push($errors, "Password must be at least 8 characters");
             }
 
@@ -45,6 +51,13 @@
 
             //no errors, proceed with registration
             require_once 'database.php';
+            //email already exists
+            $sql = "SELECT * FROM users WHERE email = '$email'";
+            $result = mysqli_query($conn, $sql);
+            $rowCount = mysqli_num_rows($result);
+            if($rowCount > 0) {
+                array_push($errors, "Email already exists");
+            }
 
             //check if there are any errors
             if (count($errors) > 0) {
@@ -53,16 +66,16 @@
                 }
             } else {    
                 //insert data into database
-                $sql = "INSERT INTO users ( full_name, email, password) VALUES (?, ?, ?)";
+                $sql = "INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)";
                 $stmt = mysqli_stmt_init($conn);
                 $prepareStmt = mysqli_stmt_prepare($stmt, $sql);
                 if ($prepareStmt) {
                     mysqli_stmt_bind_param($stmt, "sss", $fullName, $email, $password_hash);
                     mysqli_stmt_execute($stmt);
                     echo "<div class='alert alert-success'>Registration successful</div>";
-                } else {
-                    die("Something went wrong");
-                }
+                } else{
+                    echo "<div class='alert alert-danger'>Registration failed</div>";
+               }
             }
         }
         ?>
@@ -83,6 +96,7 @@
                 <input type="submit" class="btn btn-primary" name="submit" id="submit" value="Register">
             </div>
         </form>
+        <p>Already have an account? <a href="login.php">Login Here</a></p>
     </div>
 </body>
 
